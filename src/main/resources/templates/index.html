@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>XLSX → XML Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+        }
+
+        input, button {
+            display: block;
+            margin: 10px 0;
+            padding: 8px;
+            width: 100%;
+        }
+
+        button {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Конвертер XLSX → XML</h2>
+
+<label>Файл XLSX:</label>
+<input type="file" id="fileInput" accept=".xlsx">
+
+<label>Form Code:</label>
+<input type="text" id="formCode" placeholder="например: FORM_001">
+
+<button onclick="uploadFile()">Конвертировать</button>
+
+<script>
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const formCode = document.getElementById('formCode').value;
+
+        if (!fileInput.files.length) {
+            alert("Выберите файл");
+            return;
+        }
+
+        if (!formCode) {
+            alert("Введите formCode");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append("formCode", formCode);
+
+        try {
+            const response = await fetch("/api/convert", {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("Ошибка сервера");
+            }
+
+            const blob = await response.blob();
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "result.xml";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(url);
+
+        } catch (e) {
+            alert("Ошибка: " + e.message);
+        }
+    }
+</script>
+
+</body>
+</html>

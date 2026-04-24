@@ -1,0 +1,45 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Gradle wrapper (оставляем в репо)
+gradle-wrapper.jar
+gradle-wrapper.properties
+
+# Java
+*.class
+
+# Logs
+*.log
+logs/
+
+# Spring Boot
+application-local.properties
+application-dev.properties
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.swp
+*.bak
+
+# Coverage reports
+coverage/
+jacoco/
+*.exec
+
+# Node (если вдруг фронт появится)
+node_modules/
+
+# Out (IDEA output)
+out/

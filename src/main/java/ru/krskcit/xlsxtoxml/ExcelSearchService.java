@@ -45,6 +45,11 @@ public class ExcelSearchService {
         return false;
     }
 
+    public boolean cellContains(Cell cell, String text, ExcelReader excelReader, FormulaEvaluator formulaEvaluator) {
+        String value = excelReader.getCellValue(cell, formulaEvaluator);
+        return value != null && value.toLowerCase().contains(text.toLowerCase());
+    }
+
     public String firstNonEmpty(Row row, ExcelReader excelReader, FormulaEvaluator formulaEvaluator) {
         for (Cell cell : row) {
             String value = excelReader.getCellValue(cell, formulaEvaluator);
@@ -52,6 +57,32 @@ public class ExcelSearchService {
                 return value.trim();
             }
         }
+        return null;
+    }
+
+    public String firstNonEmpty(
+            Cell startCell,
+            ExcelReader excelReader,
+            FormulaEvaluator evaluator
+    ) {
+        if (startCell == null) {
+            return null;
+        }
+
+        Row row = startCell.getRow();
+
+        for (int i = startCell.getColumnIndex() + 1; i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+
+            if (cell == null) continue;
+
+            String value = excelReader.getCellValue(cell, evaluator);
+
+            if (value != null && !value.trim().isEmpty()) {
+                return value.trim();
+            }
+        }
+
         return null;
     }
 

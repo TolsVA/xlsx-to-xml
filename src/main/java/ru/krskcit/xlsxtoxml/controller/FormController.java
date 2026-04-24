@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import ru.krskcit.xlsxtoxml.HeaderExtractionService;
 import ru.krskcit.xlsxtoxml.mapper.FormMapper;
 import ru.krskcit.xlsxtoxml.factory.FormMapperFactory;
 
@@ -18,15 +19,18 @@ import ru.krskcit.xlsxtoxml.factory.FormMapperFactory;
 public class FormController {
 
     private final FormMapperFactory factory;
+    private final HeaderExtractionService headerExtractionService;
 
     @PostMapping("/convert")
     public ResponseEntity<byte[]> convert(
-            @RequestParam("file") MultipartFile file,
-            @RequestParam("formCode") String formCode
+            @RequestParam("file") MultipartFile file
     ) throws Exception {
 
-        FormMapper mapper = factory.get(formCode);
+        headerExtractionService.validateExcel(file);
 
+        String formCode = headerExtractionService.getFormOKUD(file);
+
+        FormMapper mapper = factory.get(formCode);
         byte[] xml = mapper.toXml(file);
 
         return ResponseEntity.ok()

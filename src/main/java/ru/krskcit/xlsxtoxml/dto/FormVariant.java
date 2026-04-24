@@ -4,6 +4,7 @@ import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import lombok.Data;
+import ru.krskcit.xlsxtoxml.annotation.DateFormat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +20,11 @@ public class FormVariant {
     private String name;
 
     @XmlAttribute(name = "StartDate")
+    @DateFormat("yyyy-MM-dd")
     private String startDate;
 
     @XmlAttribute(name = "EndDate")
+    @DateFormat("yyyy-MM-dd")
     private String endDate;
 
     @XmlAttribute(name = "NsiVariantCode")

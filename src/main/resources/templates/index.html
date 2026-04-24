@@ -20,6 +20,21 @@
         button {
             cursor: pointer;
         }
+
+        .error {
+            color: #b00020;
+            background: #ffe6e6;
+            padding: 10px;
+            border-radius: 6px;
+            display: none;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #0a7f2e;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -29,29 +44,29 @@
 <label>Файл XLSX:</label>
 <input type="file" id="fileInput" accept=".xlsx">
 
-<label>Form Code:</label>
-<input type="text" id="formCode" placeholder="например: FORM_001">
-
 <button onclick="uploadFile()">Конвертировать</button>
+
+<div id="errorBox" class="error"></div>
+<div id="successBox" class="success">Файл успешно обработан</div>
 
 <script>
     async function uploadFile() {
         const fileInput = document.getElementById('fileInput');
-        const formCode = document.getElementById('formCode').value;
+        const errorBox = document.getElementById('errorBox');
+        const successBox = document.getElementById('successBox');
+
+        errorBox.style.display = "none";
+        successBox.style.display = "none";
 
         if (!fileInput.files.length) {
-            alert("Выберите файл");
+            showError("Выберите файл");
             return;
         }
 
-        if (!formCode) {
-            alert("Введите formCode");
-            return;
-        }
+        const file = fileInput.files[0];
 
         const formData = new FormData();
-        formData.append("file", fileInput.files[0]);
-        formData.append("formCode", formCode);
+        formData.append("file", file);
 
         try {
             const response = await fetch("/api/convert", {
@@ -59,10 +74,26 @@
                 body: formData
             });
 
+            // ❌ если ошибка (400, 500 и т.д.)
             if (!response.ok) {
-                throw new Error("Ошибка сервера");
+                let message = "Ошибка сервера";
+
+                const contentType = response.headers.get("content-type");
+
+                if (contentType && contentType.includes("application/json")) {
+                    const json = await response.json();
+                    message = json.message || JSON.stringify(json);
+                } else {
+                    const text = await response.text();
+                    if (text && text.length < 500) {
+                        message = text;
+                    }
+                }
+
+                throw new Error(message);
             }
 
+            // ✅ если всё ок — скачиваем файл
             const blob = await response.blob();
 
             const url = window.URL.createObjectURL(blob);
@@ -75,9 +106,17 @@
 
             window.URL.revokeObjectURL(url);
 
+            successBox.style.display = "block";
+
         } catch (e) {
-            alert("Ошибка: " + e.message);
+            showError(e.message);
         }
+    }
+
+    function showError(message) {
+        const errorBox = document.getElementById('errorBox');
+        errorBox.innerText = message;
+        errorBox.style.display = "block";
     }
 </script>
 

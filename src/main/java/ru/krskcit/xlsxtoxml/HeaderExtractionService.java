@@ -5,6 +5,8 @@ import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
+
 @Service
 @RequiredArgsConstructor
 public class HeaderExtractionService {
@@ -65,9 +67,9 @@ public class HeaderExtractionService {
 
     /**
      * ✔ Fallback:
-     * ищем первый осмысленный текст в первых строках
+     * ищем ОТЧЕТ ОБ ИСПОЛНЕНИИ БЮДЖЕТА
      */
-    public String getFormNameFallback(MultipartFile file, String listName) {
+    public String getFormName(MultipartFile file, String listName) {
 
         try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
 
@@ -109,5 +111,43 @@ public class HeaderExtractionService {
                 && !value.isBlank()
                 && value.length() >= 3
                 && !value.matches("\\d+");
+    }
+
+    public String getFormOKUD(MultipartFile file) {
+        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+
+            FormulaEvaluator formulaEvaluator =
+                    workbook.getCreationHelper().createFormulaEvaluator();
+
+            Cell targetCell = search.findCell(sheet,
+                    cell -> search.cellContains(
+                            cell,
+                            "Форма по ОКУД",
+                            excelReader,
+                            formulaEvaluator
+                    )
+            );
+
+            if (targetCell == null) return null;
+
+            return search.firstNonEmpty(
+                    targetCell,
+                    excelReader,
+                    formulaEvaluator
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error extracting financial authority", e);
+        }
+    }
+
+    public void validateExcel(MultipartFile file) {
+        try (InputStream is = file.getInputStream()) {
+            WorkbookFactory.create(is); // если не Excel — будет Exception
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Файл \"" + file.getOriginalFilename() + "\" не является корректным .xlsx");
+        }
     }
 }

@@ -16,13 +16,9 @@ public class FormMapperFactory {
 
     public FormMapper get(String formCode) {
         FormMapper mapper = mappers.get(formCode);
-
         if (mapper == null) {
-            throw new IllegalArgumentException(
-                    "No mapper found for form: " + formCode
-            );
+            throw new IllegalArgumentException("Неизвестный formCode: " + formCode);
         }
-
         return mapper;
     }
 }

@@ -2,109 +2,171 @@ package ru.krskcit.xlsxtoxml;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.krskcit.xlsxtoxml.dto.Data;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static ru.krskcit.xlsxtoxml.CellConditions.notBlank;
 
 @Service
 @RequiredArgsConstructor
 public class HeaderExtractionService {
 
     private final ExcelReader excelReader;
-    private final ExcelSearchService search;
+    private final ExcelSearchService searchService;
+    private final ExcelService excelService;
 
     /**
-     * Основной метод:
-     * 1. Пытается найти по ключу
-     * 2. Если не найдено — fallback
+     * ✔ Поиск "Наименование финансового органа"
      */
-    public String extractHeader(MultipartFile file) {
-
-        String value = getNameOfFinancialAuthority(file);
-
-//        if (value == null) {
-//            value = getFormNameFallback(file);
-//        }
-
-        return value;
+    public String getName(MultipartFile file, String text) {
+        return getString(file, text);
     }
 
     /**
-     * ✔ Структурный поиск:
-     * ищем строку с "Наименование финансового органа"
+     * ✔ Поиск названия формы (например: "ОТЧЕТ ОБ ИСПОЛНЕНИИ БЮДЖЕТА")
      */
-    public String getNameOfFinancialAuthority(MultipartFile file) {
+    public String getFormName(MultipartFile file, String sheetName) {
 
-        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+        return excelService.withWorkbook(file, excelContext -> {
 
-            Sheet sheet = workbook.getSheetAt(0);
+            Sheet sheet = excelContext.sheet(sheetName);
 
-            FormulaEvaluator formulaEvaluator =
-                    workbook.getCreationHelper().createFormulaEvaluator();
+            int max = Math.min(10, sheet.getLastRowNum() + 1);
 
-            Row targetRow = search.findRow(sheet,
-                    r -> search.rowContains(
-                            r,
-                            "Наименование финансового органа",
-                            excelReader,
-                            formulaEvaluator
-                    )
-            );
+            for (int i = 0; i < max; i++) {
+                Row row = sheet.getRow(i);
+                if (row == null) continue;
 
-            if (targetRow == null) return null;
+                String value = searchService.firstNonEmpty(row, excelContext);
 
-            return search.firstNonEmpty(
-                    targetRow,
-                    excelReader,
-                    formulaEvaluator
-            );
+                if (isValidValue(value)) return value;
+            }
+            return null;
+        });
+    }
 
-        } catch (Exception e) {
-            throw new RuntimeException("Error extracting financial authority", e);
+    /**
+     * ✔ поиск "Форма по ОКУД"
+     */
+    public String getFormOKUD(MultipartFile file, String text) {
+        return getString(file, text);
+    }
+
+//    @Nullable
+//    private String getString(MultipartFile file, String text) {
+//        return excelService.withWorkbook(file, excelContext -> {
+//            Sheet sheet = excelContext.sheet(0);
+//
+//            Cell cell = searchService.findCell(sheet,
+//                    c -> searchService.cellContains(c, text, excelReader, excelContext.evaluator())
+//            );
+//            return cell == null ? null : searchService.firstNonEmpty(cell, excelReader, excelContext.evaluator());
+//        });
+//    }
+
+    @Nullable
+    private String getString(MultipartFile file, String text) {
+        return excelService.withWorkbook(file, excelContext -> {
+            Sheet sheet = excelContext.sheet(0);
+
+            Optional<Cell> firstNotBlank = cells.stream()
+                    .filter(notBlank(reader, evaluator))
+                    .findFirst();
         }
     }
 
     /**
-     * ✔ Fallback:
-     * ищем ОТЧЕТ ОБ ИСПОЛНЕНИИ БЮДЖЕТА
+     * ✔ валидация Excel файла
      */
-    public String getFormName(MultipartFile file, String listName) {
+    public void validateExcel(MultipartFile file) {
+        try (InputStream is = file.getInputStream()) {
+            WorkbookFactory.create(is); // если не Excel — будет Exception
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Файл \"" + file.getOriginalFilename() + "\" не является корректным .xlsx");
+        }
+    }
 
-        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
+    public List<Data> getListTable(MultipartFile file, String sheetName) throws Exception {
+        List<Data> result = new ArrayList<>();
+        excelService.withWorkbook(file, excelContext -> {
 
-            Sheet sheet = workbook.getSheet(listName);
 
-            FormulaEvaluator formulaEvaluator =
-                    workbook.getCreationHelper().createFormulaEvaluator();
+            FormulaEvaluator evaluator = excelContext.evaluator();
 
-            int maxRows = Math.min(10, sheet.getLastRowNum() + 1);
+            Sheet sheet = excelContext.sheet(0);
 
-            for (int i = 0; i < maxRows; i++) {
+            // 1. Ищем ячейку с нужной фразой (в "шапке")
+            Cell headerCell = findHeaderCell(sheet, evaluator, "Код дохода по бюджетной классификации");
+
+            if (headerCell == null) {
+                throw new IllegalStateException("Не найдена ключевая фраза в Excel");
+            }
+
+            // 2. Стартовая строка = +3 вниз от найденной
+            int startRow = headerCell.getRowIndex();
+            int startColumn = headerCell.getColumnIndex();
+
+            // 3. Читаем данные
+            for (int i = startRow; i <= sheet.getLastRowNum(); i++) {
 
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
-                String value = search.firstNonEmpty(
-                        row,
-                        excelReader,
-                        formulaEvaluator
-                );
+                String vd = excelReader.getCellValue(row.getCell(startColumn), evaluator);
+//                if (vd == null || vd.isBlank() || vd.contains("X")) continue;
 
-                if (isValidValue(value)) {
-                    return value;
+                String col4 = normalizeNumber(excelReader.getCellValue(row.getCell(3), evaluator));
+                String col5 = normalizeNumber(excelReader.getCellValue(row.getCell(4), evaluator));
+                String col6 = normalizeNumber(excelReader.getCellValue(row.getCell(5), evaluator));
+
+                Data data = new Data(vd, null, col4, col5, col6);
+
+                result.add(data);
+            }
+            return result;
+        });
+        return result;
+    }
+
+
+    private Cell findHeaderCell(Sheet sheet,
+                                FormulaEvaluator evaluator,
+                                String target) {
+
+        int maxRows = Math.min(50, sheet.getLastRowNum() + 1);
+
+        for (int i = 0; i < maxRows; i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+
+            int maxCols = Math.min(10, row.getLastCellNum() > 0 ? row.getLastCellNum() : 10);
+
+            for (int j = 0; j < maxCols; j++) {
+                Cell cell = row.getCell(j, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+                if (cell == null) continue;
+
+                String value = excelReader.getCellValue(cell, evaluator);
+                if (value != null &&
+                        value.toLowerCase().contains(target.toLowerCase())) {
+                    return cell;
                 }
             }
-
-            return null;
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error extracting fallback header", e);
         }
+
+        return null;
     }
 
     /**
-     * ✔ фильтр "нормального" текста
+     * ✔ проверка валидности текста
      */
     private boolean isValidValue(String value) {
         return value != null
@@ -113,41 +175,32 @@ public class HeaderExtractionService {
                 && !value.matches("\\d+");
     }
 
-    public String getFormOKUD(MultipartFile file) {
-        try (Workbook workbook = WorkbookFactory.create(file.getInputStream())) {
-
-            Sheet sheet = workbook.getSheetAt(0);
-
-            FormulaEvaluator formulaEvaluator =
-                    workbook.getCreationHelper().createFormulaEvaluator();
-
-            Cell targetCell = search.findCell(sheet,
-                    cell -> search.cellContains(
-                            cell,
-                            "Форма по ОКУД",
-                            excelReader,
-                            formulaEvaluator
-                    )
-            );
-
-            if (targetCell == null) return null;
-
-            return search.firstNonEmpty(
-                    targetCell,
-                    excelReader,
-                    formulaEvaluator
-            );
-
-        } catch (Exception e) {
-            throw new RuntimeException("Error extracting financial authority", e);
-        }
+    /**
+     * ✔ проверка строки таблицы
+     */
+    private boolean isInvalidRow(String value) {
+        return value == null || value.isBlank() || value.equals("3");
     }
 
-    public void validateExcel(MultipartFile file) {
-        try (InputStream is = file.getInputStream()) {
-            WorkbookFactory.create(is); // если не Excel — будет Exception
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Файл \"" + file.getOriginalFilename() + "\" не является корректным .xlsx");
+    /**
+     * ✔ нормализация чисел
+     */
+    private String normalizeNumber(String value) {
+        if (value == null || value.isBlank() || "-".equals(value)) {
+            return "0.00";
+        }
+
+        try {
+            BigDecimal number = new BigDecimal(
+                    value.replace(" ", "").replace(",", ".")
+            );
+
+            return number
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toPlainString();
+
+        } catch (NumberFormatException e) {
+            return "0.00";
         }
     }
 }

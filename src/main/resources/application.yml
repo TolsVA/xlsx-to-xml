@@ -1,0 +1,57 @@
+spring:
+  application:
+    name: xlsx-to-xml
+
+meta:
+  forms:
+    11701:
+      - code: Документ
+        header: Документы
+        xml: Document
+        type: 1
+        columns: [VB, ADM]
+
+      - code: Строка
+        header: Строки документа
+        xml: Data
+        type: 2
+        columns: [VD, PLAN, FACT, DIFF]
+
+    11703:
+      - code: Документ
+        header: Документы
+        xml: Document
+        type: 1
+        columns: [VB, ADM]
+
+      - code: Строка
+        header: Строки документа
+        xml: Data
+        type: 2
+        columns: [IF, PLAN, FACT, DIFF]
+
+    11712:
+      - code: Документ
+        header: Документы
+        xml: Document
+        type: 1
+        columns: [VB, ADM, RZPR, CSR, VR]
+
+      - code: Строка
+        header: Строки документа
+        xml: Data
+        type: 2
+        columns: [KOSGU, PLAN, FACT, DIFF]
+
+    11722:
+      - code: Документ
+        header: Документы
+        xml: Document
+        type: 1
+        columns: [VB, ADM]
+
+      - code: Строка
+        header: Строки документа
+        xml: Data
+        type: 2
+        columns: [RZPR, CSR, VR, KOSGU, PLAN, FACT, DIFF]

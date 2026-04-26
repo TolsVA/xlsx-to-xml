@@ -1,5 +1,6 @@
 package ru.krskcit.xlsxtoxml;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
@@ -9,7 +10,10 @@ import org.springframework.stereotype.Component;
 import java.util.function.Predicate;
 
 @Component
+@RequiredArgsConstructor
 public class ExcelSearchService {
+
+    private final ExcelReader excelReader;
 
     public Row findRow(Sheet sheet, Predicate<Row> predicate) {
         for (Row row : sheet) {
@@ -23,10 +27,8 @@ public class ExcelSearchService {
     public Cell findCell(Sheet sheet, Predicate<Cell> predicate) {
         for (Row row : sheet) {
             if (row == null) continue;
-
             for (Cell cell : row) {
                 if (cell == null) continue;
-
                 if (predicate.test(cell)) {
                     return cell;
                 }
@@ -50,9 +52,10 @@ public class ExcelSearchService {
         return value != null && value.toLowerCase().contains(text.toLowerCase());
     }
 
-    public String firstNonEmpty(Row row, ExcelReader excelReader, FormulaEvaluator formulaEvaluator) {
+
+    public String firstNonEmpty(Row row, ExcelContext excelContext) {
         for (Cell cell : row) {
-            String value = excelReader.getCellValue(cell, formulaEvaluator);
+            String value = excelReader.getCellValue(cell, excelContext.evaluator());
             if (value != null && !value.isBlank()) {
                 return value.trim();
             }

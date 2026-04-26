@@ -28,7 +28,7 @@ public class FormController {
 
         headerExtractionService.validateExcel(file);
 
-        String formCode = headerExtractionService.getFormOKUD(file);
+        String formCode = headerExtractionService.getFormOKUD(file, "Форма по ОКУД");
 
         FormMapper mapper = factory.get(formCode);
         byte[] xml = mapper.toXml(file);

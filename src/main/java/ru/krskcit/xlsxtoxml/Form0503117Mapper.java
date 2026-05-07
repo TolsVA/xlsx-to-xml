@@ -32,33 +32,51 @@ import static ru.krskcit.xlsxtoxml.constants.SchemaConstants.*;
 @RequiredArgsConstructor
 public class Form0503117Mapper implements FormMapper {
 
-    private final HeaderExtractionService headerExtractionService;
+//    private final HeaderExtractionService headerExtractionService;
     private final MetaService metaService;
+    private final ExcelParseService service;
+    private final ExcelProperties table;
 
     @Override
     public byte[] toXml(MultipartFile file) throws Exception {
 
-        String formName = headerExtractionService.getFormName(file,ExcelSearchConstants.LIST_NAME);
-        String sourceName = headerExtractionService.getName(file, ExcelSearchConstants.FINANCIAL_AUTHORITY);
+        MultiSheetResult multiSheetResult = service.parse(file);
+        LocalDate reportDate = multiSheetResult.getReportDate();
 
-        SourceDictItem sourceDictItem = SourceDictionary.getByName(sourceName);
 
-        int year = LocalDate.now().getYear() - 1;
+//        public static final String FINANCIAL_AUTHORITY = "Наименование финансового органа";
+//        public static final String LIST_NAME = "Доходы";
+//        String formName = headerExtractionService.getFormName(file,ExcelSearchConstants.LIST_NAME);
+//        String sourceName = headerExtractionService.getName(file, ExcelSearchConstants.FINANCIAL_AUTHORITY);
 
-        LocalDate start = LocalDate.of(year, 1, 1);
+
+
+//        SourceDictItem sourceDictItem = SourceDictionary.getByName(sourceName);
+
+//        int year = LocalDate.now().getYear() - 1;
+        int year = reportDate.getYear() - 1;
+
+        LocalDate start = LocalDate.of(year, reportDate.getMonth(), reportDate.getDayOfMonth());
         LocalDate end = start.plusYears(1);
 
         String startDate = start.toString();
         String endDate = end.toString();
 
-        List<Data> dataList = headerExtractionService.getListTable(file, ExcelSearchConstants.LIST_NAME);
+//        List<Data> dataList = headerExtractionService.getListTable(file, ExcelSearchConstants.LIST_NAME);
 
-        Table table = Table.builder()
-                .code("Строка")
-                .build();
 
-        dataList.forEach(table::addData);
+        Table table = new Table();
+        table.setCode("Строка");
 
+        for (ParseResult parseResult : multiSheetResult.getParseResults()) {
+            if (parseResult.getSheetName().equals("Доходы")) {
+                List<Data> incomeSheetList = parseResult.getDatas();
+                incomeSheetList.forEach(table::addData);
+            }
+        }
+
+
+        System.out.println(table);
         Document document = new Document();
         document.setVb("09");
         document.setAdm("395.04000000");
@@ -81,7 +99,7 @@ public class Form0503117Mapper implements FormMapper {
 
         Form form117 = new Form();
         form117.setCode("117");
-        form117.setName(formName);
+        form117.setName(multiSheetResult.getReportTitle());
         form117.setStatus(5);
         form117.setSignature(new Signature());
 
@@ -117,7 +135,9 @@ public class Form0503117Mapper implements FormMapper {
         form11722.setMeta(metaService.build("11722"));
         form11722.setSignature(new Signature());
 
-        List<Form> forms = List.of(form117, form11701, form11703, form11712, form11722);
+        List<Form> forms = List.of(form117/*, form11701, form11703, form11712, form11722*/);
+
+        SourceDictItem sourceDictItem = SourceDictionary.getByName(multiSheetResult.getFinancialOrg());
 
         Source source = new Source();
         source.setCode(sourceDictItem.code());
@@ -140,9 +160,9 @@ public class Form0503117Mapper implements FormMapper {
         period.setDate(startDate);
         period.setEndDate(endDate);
         period.setName(year + " год");
-        period.setDays(0);
-        period.setMonths(0);
-        period.setYears(1);
+        period.setDays(reportDate.getDayOfMonth());
+        period.setMonths(reportDate.getMonthValue());
+        period.setYears(java.time.Period.between(start, end).getYears());
         period.setStatus(6);
         period.setPeriodVariant(periodVariant);
 

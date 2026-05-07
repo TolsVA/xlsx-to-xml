@@ -6,6 +6,8 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+import java.util.stream.Stream;
+
 @lombok.Data
 @XmlAccessorType(XmlAccessType.FIELD)
 @AllArgsConstructor
@@ -26,4 +28,9 @@ public class Data {
 
     @XmlAttribute(name = "_x0036_")
     private String col6;
+
+    public boolean isEmpty() {
+        return Stream.of(vd, inf, col4, col5, col6)
+                .allMatch(v -> v == null || v.trim().isEmpty());
+    }
 }

@@ -61,28 +61,28 @@ public class HeaderExtractionService {
         return getString(file, text);
     }
 
-//    @Nullable
-//    private String getString(MultipartFile file, String text) {
-//        return excelService.withWorkbook(file, excelContext -> {
-//            Sheet sheet = excelContext.sheet(0);
-//
-//            Cell cell = searchService.findCell(sheet,
-//                    c -> searchService.cellContains(c, text, excelReader, excelContext.evaluator())
-//            );
-//            return cell == null ? null : searchService.firstNonEmpty(cell, excelReader, excelContext.evaluator());
-//        });
-//    }
-
     @Nullable
     private String getString(MultipartFile file, String text) {
         return excelService.withWorkbook(file, excelContext -> {
             Sheet sheet = excelContext.sheet(0);
 
-            Optional<Cell> firstNotBlank = cells.stream()
-                    .filter(notBlank(reader, evaluator))
-                    .findFirst();
-        }
+            Cell cell = searchService.findCell(sheet,
+                    c -> searchService.cellContains(c, text, excelReader, excelContext.evaluator())
+            );
+            return cell == null ? null : searchService.firstNonEmpty(cell, excelReader, excelContext.evaluator());
+        });
     }
+
+//    @Nullable
+//    private String getString(MultipartFile file, String text) {
+//        return excelService.withWorkbook(file, excelContext -> {
+//            Sheet sheet = excelContext.sheet(0);
+//
+//            Optional<Cell> firstNotBlank = cells.stream()
+//                    .filter(notBlank(reader, evaluator))
+//                    .findFirst();
+//        }
+//    }
 
     /**
      * ✔ валидация Excel файла

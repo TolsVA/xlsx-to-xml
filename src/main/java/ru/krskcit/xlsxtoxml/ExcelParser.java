@@ -111,15 +111,48 @@ public class ExcelParser {
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 6)) break;
 //                        value = formatIncome(value);
-                        vd = value.substring(3);
+                        vd = value;
                     }
 
                     if (result.getSheetName().equals("Расходы")) {
                         if (value.startsWith("00", 18)) break;
+                        vd = value.substring(3);
                     }
 
                     if (result.getSheetName().equals("Источники")) {
                         if (value.startsWith("00", 11)) break;
+                        if (value.startsWith("00", 18)) break;
+
+                        for (int k = result.getDatas().size() - 1; k >= 0; k--) {
+
+                            Data data = result.getDatas().get(k);
+                            String in = data.getInf();
+
+                            if (in != null && in.length() >= 17) {
+
+                                boolean sameFirst13 =
+                                        in.substring(0, 10).equals(value.substring(3, 13));
+
+                                boolean sameLast3 =
+                                        in.substring(in.length() - 3)
+                                                .equals(value.substring(value.length() - 3));
+
+                                boolean inHas0000 =
+                                        in.startsWith("0000", 10);
+
+                                boolean valueNot0000 =
+                                        !value.startsWith("0000", 13);
+
+
+                                if (sameFirst13
+                                        && sameLast3
+                                        && inHas0000
+                                        && valueNot0000
+                                ) {
+                                    result.getDatas().remove(k);
+                                }
+                            }
+                        }
                         inf = value.substring(3);
                     }
 //                    vd = formatExpenses(value);
@@ -151,7 +184,8 @@ public class ExcelParser {
 
     private BigDecimal format(String value) {
         if (value == null || value.isBlank()) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+//            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            return null;
         }
 
         String cleaned = value
@@ -409,12 +443,10 @@ public class ExcelParser {
                 .replace("–", "-")
                 .replace("—", "-");
 
-        if (cleaned.equals("-")
-                || cleaned.equalsIgnoreCase("x")
-                || cleaned.equalsIgnoreCase("х") // кириллическая х
-        ) {
-            return "0,00";
-        }
+        if (cleaned.equals("-")) return "0,00";
+
+        if (cleaned.equalsIgnoreCase("x")
+                || cleaned.equalsIgnoreCase("х") /*кириллическая х*/) return null;
 
         return cleaned;
     }

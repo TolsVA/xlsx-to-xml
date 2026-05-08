@@ -68,8 +68,13 @@ public class Form0503117Mapper implements FormMapper {
         Table tableIncome = new Table();
         tableIncome.setCode("Строка");
 
-        Table tableOfSources = new Table();
-        tableOfSources.setCode("Строка");
+        Table tableSources = new Table();
+        tableSources.setCode("Строка");
+
+//        Table tableExpense  = new Table();
+//        tableExpense.setCode("Строка");
+
+        FormVariant formVariantExpense = new FormVariant();
 
         for (ParseResult parseResult : multiSheetResult.getParseResults()) {
             if (parseResult.getSheetName().equals("Доходы")) {
@@ -78,7 +83,40 @@ public class Form0503117Mapper implements FormMapper {
             }
             if (parseResult.getSheetName().equals("Источники")) {
                 List<Data> sourcesSheetList = parseResult.getDatas();
-                sourcesSheetList.forEach(tableOfSources::addData);
+                sourcesSheetList.forEach(tableSources::addData);
+            }
+            if (parseResult.getSheetName().equals("Расходы")) {
+//                List<Data> expenseSheetList = parseResult.getDatas();
+//                expenseSheetList.forEach(tableExpense::addData);
+
+                List<Data> expenseSheetList = parseResult.getDatas();
+
+                for (Data data : expenseSheetList) {
+                    Table tableExpense  = new Table();
+                    tableExpense.setCode("Строка");
+
+                    tableExpense.addData(data);
+
+                    Document documentExpense = new Document();
+                    documentExpense.setVb("09");
+                    documentExpense.setAdm("395.04000000");
+                    documentExpense.setDocStatus(new DocStatus(2));
+                    documentExpense.addTable(tableExpense);
+                    documentExpense.setSignature(new Signature());
+
+                    formVariantExpense.setNumber(1);
+                    formVariantExpense.setName("Вариант №1");
+                    formVariantExpense.setStartDate(startDate);
+                    formVariantExpense.setEndDate(endDate);
+                    formVariantExpense.setNsiVariantCode("0000");
+                    formVariantExpense.setNsiVariantName("Основной вариант");
+                    formVariantExpense.setBehaviour(0);
+                    formVariantExpense.setStatus(6);
+                    formVariantExpense.addDocument(documentExpense);
+                    formVariantExpense.setSignature(new Signature());
+
+                    DateAnnotationProcessor.formatDates(formVariantExpense);
+                }
             }
         }
 
@@ -102,28 +140,48 @@ public class Form0503117Mapper implements FormMapper {
         formVariantIncome.addDocument(documentIncome);
         formVariantIncome.setSignature(new Signature());
 
-        Document documentOfSources = new Document();
-        documentOfSources.setVb("09");
-        documentOfSources.setAdm("395.04000000");
-        documentOfSources.setDocStatus(new DocStatus(2));
-        documentOfSources.addTable(tableOfSources);
-        documentOfSources.setSignature(new Signature());
+        Document documentSources = new Document();
+        documentSources.setVb("09");
+        documentSources.setAdm("395.04000000");
+        documentSources.setDocStatus(new DocStatus(2));
+        documentSources.addTable(tableSources);
+        documentSources.setSignature(new Signature());
 
-        FormVariant formVariantOfSources = new FormVariant();
-        formVariantOfSources.setNumber(1);
-        formVariantOfSources.setName("Вариант №1");
-        formVariantOfSources.setStartDate(startDate);
-        formVariantOfSources.setEndDate(endDate);
-        formVariantOfSources.setNsiVariantCode("0000");
-        formVariantOfSources.setNsiVariantName("Основной вариант");
-        formVariantOfSources.setBehaviour(0);
-        formVariantOfSources.setStatus(6);
-        formVariantOfSources.addDocument(documentOfSources);
-        formVariantOfSources.setSignature(new Signature());
+        FormVariant formVariantSources = new FormVariant();
+        formVariantSources.setNumber(1);
+        formVariantSources.setName("Вариант №1");
+        formVariantSources.setStartDate(startDate);
+        formVariantSources.setEndDate(endDate);
+        formVariantSources.setNsiVariantCode("0000");
+        formVariantSources.setNsiVariantName("Основной вариант");
+        formVariantSources.setBehaviour(0);
+        formVariantSources.setStatus(6);
+        formVariantSources.addDocument(documentSources);
+        formVariantSources.setSignature(new Signature());
+
+//        Document documentExpense = new Document();
+//        documentExpense.setVb("09");
+//        documentExpense.setAdm("395.04000000");
+//        documentExpense.setDocStatus(new DocStatus(2));
+//        documentExpense.addTable(tableExpense);
+//        documentExpense.setSignature(new Signature());
+//
+//        FormVariant formVariantExpense = new FormVariant();
+//        formVariantExpense.setNumber(1);
+//        formVariantExpense.setName("Вариант №1");
+//        formVariantExpense.setStartDate(startDate);
+//        formVariantExpense.setEndDate(endDate);
+//        formVariantExpense.setNsiVariantCode("0000");
+//        formVariantExpense.setNsiVariantName("Основной вариант");
+//        formVariantExpense.setBehaviour(0);
+//        formVariantExpense.setStatus(6);
+//        formVariantExpense.addDocument(documentExpense);
+//        formVariantExpense.setSignature(new Signature());
 
 
         DateAnnotationProcessor.formatDates(formVariantIncome);
-        DateAnnotationProcessor.formatDates(formVariantOfSources);
+        DateAnnotationProcessor.formatDates(formVariantSources);
+//        DateAnnotationProcessor.formatDates(formVariantExpense);
 
         Form form117 = new Form();
         form117.setCode("117");
@@ -143,7 +201,7 @@ public class Form0503117Mapper implements FormMapper {
         form11703.setCode("11703");
         form11703.setName("Источники финансирования дефицита бюджета");
         form11703.setStatus(6);
-        form11703.addFormVariant(formVariantOfSources);
+        form11703.addFormVariant(formVariantSources);
         form11703.setMeta(metaService.build("11703"));
         form11703.setSignature(new Signature());
 
@@ -151,7 +209,7 @@ public class Form0503117Mapper implements FormMapper {
         form11712.setCode("11712");
         form11712.setName("Расходы бюджета");
         form11712.setStatus(6);
-        form11712.addFormVariant(new FormVariant());
+        form11712.addFormVariant(formVariantExpense);
         form11712.setMeta(metaService.build("11712"));
         form11712.setSignature(new Signature());
 

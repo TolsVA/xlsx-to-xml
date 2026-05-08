@@ -6,6 +6,7 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -28,9 +29,5 @@ public class Source {
     private int status;
 
     @XmlElement(name = "Form")
-    private List<Form> forms;
-
-    public void addListForm(List<Form> forms){
-        this.forms = forms;
-    }
+    private List<Form> forms = new ArrayList<>();
 }

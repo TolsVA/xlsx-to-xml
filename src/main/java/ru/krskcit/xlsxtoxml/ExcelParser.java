@@ -1,19 +1,17 @@
 package ru.krskcit.xlsxtoxml;
 
-import jakarta.xml.bind.annotation.XmlAttribute;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Component;
-import ru.krskcit.xlsxtoxml.dto.Data;
-import ru.krskcit.xlsxtoxml.dto.ParseResult;
-
+import ru.krskcit.xlsxtoxml.annotation.DateAnnotationProcessor;
+import ru.krskcit.xlsxtoxml.dto.*;
+import ru.krskcit.xlsxtoxml.dto.Table;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +21,7 @@ public class ExcelParser {
     private FormulaEvaluator evaluator;
     private final DataFormatter formatter = new DataFormatter();
     private MultiSheetResult multiSheetResult;
+    private LocalDate reportDate;
 
     public ParseResult parse(Sheet sheet, FormulaEvaluator evaluator, MultiSheetResult multiSheetResult) {
         this.evaluator = evaluator;
@@ -40,6 +39,16 @@ public class ExcelParser {
 
         Row headRow = null;
         int dataCol = -1;
+
+        FormVariant formVariant = new FormVariant();
+        formVariant.setNumber(1);
+        formVariant.setName("Вариант №1");
+        formVariant.setNsiVariantCode("0000");
+        formVariant.setNsiVariantName("Основной вариант");
+        formVariant.setBehaviour(0);
+        formVariant.setStatus(6);
+        formVariant.setSignature(new Signature());
+
 
         for (int i = 0; i <= sheet.getLastRowNum(); i++) {
 
@@ -78,11 +87,9 @@ public class ExcelParser {
                 );
             }
 
-            String vd = null;
-            String inf = null;
-            BigDecimal col4 = null;
-            BigDecimal col5 = null;
-            BigDecimal col6 = null;
+            Data data = null;
+            Table table = null;
+            Document document = null;
 
             for (int j = dataCol; j < headRow.getLastCellNum(); j++) {
 
@@ -92,16 +99,32 @@ public class ExcelParser {
 
                 String value = normalizeValue(raw(row.getCell(j)));   // ← значение
 
-
                 // если столбец ".*код .* бюджетной классификации.*"
                 if (norm(key).matches(targetColumn)) {
-
                     if (value == null) break;
 
                     value = value.replaceAll("\\s+", "")
                             .replace('\u00A0', ' ')
                             .replace("\n", " ")
                             .trim();
+
+
+                    if (formVariant.getDocuments().isEmpty()
+                            || !formVariant.getDocuments().get(formVariant.getDocuments().size() - 1)
+                            .getAdm().equals(value.substring(0, 3))
+                    ) {
+                        table = new Table();
+                        table.setCode("Строка");
+
+                        document = new Document();
+                        document.setVb("09");
+                        document.setAdm(value.substring(0, 3));
+                        document.setDocStatus(new DocStatus(2));
+//                        document.addTable(table);
+                        document.setSignature(new Signature());
+
+                        formVariant.addDocument(document);
+                    }
 
                     if (value.length() < 20 || value.isBlank()) break;
 
@@ -110,73 +133,100 @@ public class ExcelParser {
 
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 6)) break;
-//                        value = formatIncome(value);
-                        vd = value;
+
+                        data = new Data();
+                        data.setVd(value.substring(3));
+
+//                        vd = value;
                     }
 
                     if (result.getSheetName().equals("Расходы")) {
                         if (value.startsWith("00", 18)) break;
-                        vd = value.substring(3);
+                        data = new Data();
+                        data.setVd(value.substring(3));
                     }
 
                     if (result.getSheetName().equals("Источники")) {
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 18)) break;
 
-                        for (int k = result.getDatas().size() - 1; k >= 0; k--) {
+//                        for (int k = result.getDatas().size() - 1; k >= 0; k--) {
 
-                            Data data = result.getDatas().get(k);
-                            String in = data.getInf();
-
-                            if (in != null && in.length() >= 17) {
-
-                                boolean sameFirst13 =
-                                        in.substring(0, 10).equals(value.substring(3, 13));
-
-                                boolean sameLast3 =
-                                        in.substring(in.length() - 3)
-                                                .equals(value.substring(value.length() - 3));
-
-                                boolean inHas0000 =
-                                        in.startsWith("0000", 10);
-
-                                boolean valueNot0000 =
-                                        !value.startsWith("0000", 13);
-
-
-                                if (sameFirst13
-                                        && sameLast3
-                                        && inHas0000
-                                        && valueNot0000
-                                ) {
-                                    result.getDatas().remove(k);
-                                }
-                            }
-                        }
-                        inf = value.substring(3);
+//                            Data data = result.getDatas().get(k);
+//                            String in = data.getInf();
+//
+//                            if (in != null && in.length() >= 17) {
+//
+//                                boolean sameFirst13 =
+//                                        in.substring(0, 10).equals(value.substring(3, 13));
+//
+//                                boolean sameLast3 =
+//                                        in.substring(in.length() - 3)
+//                                                .equals(value.substring(value.length() - 3));
+//
+//                                boolean inHas0000 =
+//                                        in.startsWith("0000", 10);
+//
+//                                boolean valueNot0000 =
+//                                        !value.startsWith("0000", 13);
+//
+//
+//                                if (sameFirst13
+//                                        && sameLast3
+//                                        && inHas0000
+//                                        && valueNot0000
+//                                ) {
+//                                    result.getDatas().remove(k);
+//                                }
+//                            }
+//                        }
+                        data = new Data();
+                        data.setInf(value.substring(3));
                     }
-//                    vd = formatExpenses(value);
                 }
-                if (norm(key).equals("утвержденные бюджетные назначения")) col4 = format(value);
-                if (norm(key).equals("исполнено")) col5 = format(value);
-                if (norm(key).equals("неисполненные назначения")) col6 = format(value);
+                if (norm(key).equals("утвержденные бюджетные назначения")) {
+                    Objects.requireNonNull(data).setCol4(format(value));
+                }
+                if (norm(key).equals("исполнено")) {
+                    Objects.requireNonNull(data).setCol5(format(value));
+                }
+                if (norm(key).equals("неисполненные назначения")) {
+                    Objects.requireNonNull(data).setCol6(format(value));
+                }
             }
 
-            Data data = new Data(vd, inf, col4, col5, col6);
 
-            if (!data.isEmpty()) {
-                result.getDatas().add(data);
-//                System.out.println(data);
+            if (table != null) {
+                table.addData(data);
+                document.getTables().add(table);
             }
+
+//            if (data != null && !data.isEmpty() && table != null) {
+//                table.addData(data);
+//            }
 //            if (d.get/ColumnData().values().stream().allMatch(v -> v == null || v.trim().isEmpty())) continue;
 
 //            result.addData(datas);
         }
+        int year = reportDate.getYear() - 1;
+
+        LocalDate start = LocalDate.of(year, reportDate.getMonth(), reportDate.getDayOfMonth());
+        LocalDate end = start.plusYears(1);
+
+        String startDate = start.toString();
+        String endDate = end.toString();
+
+        formVariant.setStartDate(startDate);
+        formVariant.setEndDate(endDate);
+
+        DateAnnotationProcessor.formatDates(formVariant);
+
+        result.getFormVariants().add(formVariant);
 
         // фильтруем лишние данные
-        if (result.getSheetName().equals("Доходы")) {
-            List<Data> resultDataOrigin = result.getDatas();
-        }
+//        if (result.getSheetName().equals("Доходы")) {
+//            List<Data> resultDataOrigin = result.getDatas();
+//        }
 
 
         return result;
@@ -199,77 +249,6 @@ public class ExcelParser {
         }
 
         return new BigDecimal(cleaned).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    boolean isAggregate(String kbk, int start, int end, String compareWith) {
-        return kbk.substring(start, end).equals(compareWith);
-    }
-
-    private String formatExpenses(String input) {
-        if (input == null) return "";
-
-        // убираем всё кроме цифр
-        String digits = input.replaceAll("\\D", "");
-
-        int[] groups = {3, 2, 2, 5, 5, 3};
-        StringBuilder result = new StringBuilder();
-
-        int pos = 0;
-
-        for (int g : groups) {
-            if (pos >= digits.length()) break;
-
-            int end = Math.min(pos + g, digits.length());
-
-            if (!result.isEmpty()) {
-                result.append("    ");
-            }
-
-            result.append(digits, pos, end);
-            pos = end;
-        }
-
-        return result.toString();
-    }
-
-    private String formatIncome(String input) {
-        if (input == null) return "";
-
-        // убираем всё кроме цифр
-        String digits = input.replaceAll("\\D", "");
-
-        int[] groups = {3, 1, 2, 2, 3, 2, 4, 3};
-        StringBuilder result = new StringBuilder();
-
-        int pos = 0;
-
-        for (int g : groups) {
-            if (pos >= digits.length()) break;
-
-            int end = Math.min(pos + g, digits.length());
-
-            if (!result.isEmpty()) {
-                result.append("    ");
-            }
-
-            result.append(digits, pos, end);
-            pos = end;
-        }
-
-        return result.toString();
-    }
-
-    private double parseNumber(String value) {
-        if (value == null || value.isBlank()) return 0;
-
-        try {
-            String cleaned = value
-                    .replaceAll("\\s+", "")
-                    .replace(",", ".");
-            return Double.parseDouble(cleaned);
-        } catch (NumberFormatException e) {
-            return 0;
-        }
     }
 
     // ---------------- HEAD ----------------
@@ -332,9 +311,9 @@ public class ExcelParser {
                 multiSheetResult.setFinancialOrg(next(row, i));
             }
 
-            if (multiSheetResult.getReportDate() == null && s.contains("дата")) {
+            if (reportDate == null && s.contains("дата")) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-                multiSheetResult.setReportDate(LocalDate.parse(Objects.requireNonNull(next(row, i)).trim(), formatter));
+                reportDate = LocalDate.parse(Objects.requireNonNull(next(row, i)).trim(), formatter);
             }
 
             if (multiSheetResult.getPublicOrg() == null &&

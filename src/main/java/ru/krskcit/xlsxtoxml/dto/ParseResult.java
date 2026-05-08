@@ -1,9 +1,11 @@
 package ru.krskcit.xlsxtoxml.dto;
 
+import lombok.Data;
+
 import java.util.ArrayList;
 import java.util.List;
 
-@lombok.Data
+@Data
 public class ParseResult {
 
     private String sheetName;
@@ -11,5 +13,5 @@ public class ParseResult {
     private Integer subtitleRow;
     private Integer reportRow;
 
-    private List<Data> datas = new ArrayList<>();
+    private List<FormVariant> formVariants = new ArrayList<>();
 }

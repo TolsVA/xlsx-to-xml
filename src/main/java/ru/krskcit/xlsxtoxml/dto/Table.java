@@ -13,7 +13,7 @@ import java.util.List;
 public class Table {
 
     @XmlAttribute(name = "Code")
-    public String code;
+    private String code;
 
     @XmlElement(name = "Data")
     public List<Data> data = new ArrayList<>();

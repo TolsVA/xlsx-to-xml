@@ -50,6 +50,9 @@ public class ExcelParser {
         formVariant.setSignature(new Signature());
 
 
+        Table table = null;
+        Document document = null;
+
         for (int i = 0; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
@@ -87,15 +90,13 @@ public class ExcelParser {
                 );
             }
 
-            Data data = null;
-            Table table = null;
-            Document document = null;
+            Data data = new Data();
 
             for (int j = dataCol; j < headRow.getLastCellNum(); j++) {
 
                 String key = normalizeValue(raw(headRow.getCell(j))); // ← ключ из header
 
-                if (key == null || key.isBlank()) continue;
+                if (key == null || key.isBlank()) break;
 
                 String value = normalizeValue(raw(row.getCell(j)));   // ← значение
 
@@ -108,6 +109,7 @@ public class ExcelParser {
                             .replace("\n", " ")
                             .trim();
 
+                    if (value.startsWith("000")) break;
 
                     if (formVariant.getDocuments().isEmpty()
                             || !formVariant.getDocuments().get(formVariant.getDocuments().size() - 1)
@@ -120,7 +122,7 @@ public class ExcelParser {
                         document.setVb("09");
                         document.setAdm(value.substring(0, 3));
                         document.setDocStatus(new DocStatus(2));
-//                        document.addTable(table);
+                        document.getTables().add(table);
                         document.setSignature(new Signature());
 
                         formVariant.addDocument(document);
@@ -129,20 +131,15 @@ public class ExcelParser {
                     if (value.length() < 20 || value.isBlank()) break;
 
                     if (result.getSheetName().equals("Доходы")) {
-                        if (value.startsWith("000")) break;
-
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 6)) break;
 
-                        data = new Data();
                         data.setVd(value.substring(3));
-
-//                        vd = value;
                     }
 
                     if (result.getSheetName().equals("Расходы")) {
                         if (value.startsWith("00", 18)) break;
-                        data = new Data();
+
                         data.setVd(value.substring(3));
                     }
 
@@ -150,37 +147,38 @@ public class ExcelParser {
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 18)) break;
 
-//                        for (int k = result.getDatas().size() - 1; k >= 0; k--) {
 
-//                            Data data = result.getDatas().get(k);
-//                            String in = data.getInf();
-//
-//                            if (in != null && in.length() >= 17) {
-//
-//                                boolean sameFirst13 =
-//                                        in.substring(0, 10).equals(value.substring(3, 13));
-//
-//                                boolean sameLast3 =
-//                                        in.substring(in.length() - 3)
-//                                                .equals(value.substring(value.length() - 3));
-//
-//                                boolean inHas0000 =
-//                                        in.startsWith("0000", 10);
-//
-//                                boolean valueNot0000 =
-//                                        !value.startsWith("0000", 13);
-//
-//
-//                                if (sameFirst13
-//                                        && sameLast3
-//                                        && inHas0000
-//                                        && valueNot0000
-//                                ) {
-//                                    result.getDatas().remove(k);
-//                                }
-//                            }
-//                        }
-                        data = new Data();
+                        assert table != null;
+                        for (int k = table.getData().size() - 1; k >= 0; k--) {
+
+                            Data d = table.getData().get(k);
+                            String in = d.getInf();
+
+                            if (in != null && in.length() >= 17) {
+
+                                boolean sameFirst13 =
+                                        in.substring(0, 10).equals(value.substring(3, 13));
+
+                                boolean sameLast3 =
+                                        in.substring(in.length() - 3)
+                                                .equals(value.substring(value.length() - 3));
+
+                                boolean inHas0000 =
+                                        in.startsWith("0000", 10);
+
+                                boolean valueNot0000 =
+                                        !value.startsWith("0000", 13);
+
+
+                                if (sameFirst13
+                                        && sameLast3
+                                        && inHas0000
+                                        && valueNot0000
+                                ) {
+                                    table.getData().remove(k);
+                                }
+                            }
+                        }
                         data.setInf(value.substring(3));
                     }
                 }
@@ -195,18 +193,13 @@ public class ExcelParser {
                 }
             }
 
-
-            if (table != null) {
-                table.addData(data);
-                document.getTables().add(table);
+            if (document != null) {
+                if (!data.isEmpty()) {
+                    table.getData().add(data);
+                } else if(table.getData().isEmpty()){
+                    formVariant.getDocuments().remove(document);
+                }
             }
-
-//            if (data != null && !data.isEmpty() && table != null) {
-//                table.addData(data);
-//            }
-//            if (d.get/ColumnData().values().stream().allMatch(v -> v == null || v.trim().isEmpty())) continue;
-
-//            result.addData(datas);
         }
         int year = reportDate.getYear() - 1;
 
@@ -222,12 +215,6 @@ public class ExcelParser {
         DateAnnotationProcessor.formatDates(formVariant);
 
         result.getFormVariants().add(formVariant);
-
-        // фильтруем лишние данные
-//        if (result.getSheetName().equals("Доходы")) {
-//            List<Data> resultDataOrigin = result.getDatas();
-//        }
-
 
         return result;
     }

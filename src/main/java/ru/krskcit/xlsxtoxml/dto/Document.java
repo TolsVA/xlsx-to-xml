@@ -27,8 +27,4 @@ public class Document {
 
     @XmlElement(name = "Signature")
     private Signature signature;
-
-    public void addTable(Table table) {
-        tables.add(table);
-    }
 }

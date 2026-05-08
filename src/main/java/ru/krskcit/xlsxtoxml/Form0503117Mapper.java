@@ -38,6 +38,7 @@ public class Form0503117Mapper implements FormMapper {
         form117.setSignature(new Signature());
 
         Source source = new Source();
+        source.getForms().add(form117);
 
         for (ParseResult parseResult : multiSheetResult.getParseResults()) {
             Form form = new Form();

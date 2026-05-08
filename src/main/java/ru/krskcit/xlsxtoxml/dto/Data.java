@@ -36,7 +36,10 @@ public class Data {
     private BigDecimal col6;
 
     public boolean isEmpty() {
-        return Stream.of(vd, inf/*, col4, col5, col6*/)
-                .allMatch(v -> v == null || v.trim().isEmpty());
+        return vd == null
+                && inf == null
+                && col4 == null
+                && col5 == null
+                && col6 == null;
     }
 }

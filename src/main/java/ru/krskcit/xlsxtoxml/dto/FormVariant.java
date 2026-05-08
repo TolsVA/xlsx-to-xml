@@ -3,6 +3,7 @@ package ru.krskcit.xlsxtoxml.dto;
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
+import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Data;
 import ru.krskcit.xlsxtoxml.annotation.DateFormat;
 
@@ -39,7 +40,11 @@ public class FormVariant {
     @XmlAttribute(name = "Status")
     private int status;
 
+    @XmlElement(name = "Document")
     private List<Document> documents = new ArrayList<>();
+
+    @XmlElement(name = "Signature")
+    private Signature signature;
 
     public void addDocument(Document document) {
         this.documents.add(document);

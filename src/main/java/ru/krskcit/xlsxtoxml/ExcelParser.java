@@ -8,6 +8,8 @@ import ru.krskcit.xlsxtoxml.dto.Data;
 import ru.krskcit.xlsxtoxml.dto.ParseResult;
 
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -78,9 +80,9 @@ public class ExcelParser {
 
             String vd = null;
             String inf = null;
-            String col4 = null;
-            String col5 = null;
-            String col6 = null;
+            BigDecimal col4 = null;
+            BigDecimal col5 = null;
+            BigDecimal col6 = null;
 
             for (int j = dataCol; j < headRow.getLastCellNum(); j++) {
 
@@ -108,29 +110,32 @@ public class ExcelParser {
 
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 6)) break;
-
 //                        value = formatIncome(value);
-
-
+                        vd = value.substring(3);
                     }
 
                     if (result.getSheetName().equals("Расходы")) {
                         if (value.startsWith("00", 18)) break;
-                        vd = formatExpenses(value);
                     }
+
+                    if (result.getSheetName().equals("Источники")) {
+                        if (value.startsWith("00", 11)) break;
+                        inf = value.substring(3);
+                    }
+//                    vd = formatExpenses(value);
                 }
-                if (norm(key).equals("утвержденные бюджетные назначения")) col4 = value;
-                if (norm(key).equals("исполнено")) col5 = value;
-                if (norm(key).equals("неисполненные назначения")) col6 = value;
+                if (norm(key).equals("утвержденные бюджетные назначения")) col4 = format(value);
+                if (norm(key).equals("исполнено")) col5 = format(value);
+                if (norm(key).equals("неисполненные назначения")) col6 = format(value);
             }
 
             Data data = new Data(vd, inf, col4, col5, col6);
 
             if (!data.isEmpty()) {
                 result.getDatas().add(data);
-                System.out.println(data);
+//                System.out.println(data);
             }
-//            if (d.getColumnData().values().stream().allMatch(v -> v == null || v.trim().isEmpty())) continue;
+//            if (d.get/ColumnData().values().stream().allMatch(v -> v == null || v.trim().isEmpty())) continue;
 
 //            result.addData(datas);
         }
@@ -142,6 +147,24 @@ public class ExcelParser {
 
 
         return result;
+    }
+
+    private BigDecimal format(String value) {
+        if (value == null || value.isBlank()) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        String cleaned = value
+                .replace("\u00A0", "") // неразрывные пробелы
+                .replace(" ", "")
+                .replace(",", ".")
+                .replaceAll("[^0-9.\\-]", ""); // убираем всё лишнее
+
+        if (cleaned.isEmpty() || cleaned.equals(".")) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        return new BigDecimal(cleaned).setScale(2, RoundingMode.HALF_UP);
     }
 
     boolean isAggregate(String kbk, int start, int end, String compareWith) {
@@ -386,7 +409,10 @@ public class ExcelParser {
                 .replace("–", "-")
                 .replace("—", "-");
 
-        if (cleaned.equals("-")) {
+        if (cleaned.equals("-")
+                || cleaned.equalsIgnoreCase("x")
+                || cleaned.equalsIgnoreCase("х") // кириллическая х
+        ) {
             return "0,00";
         }
 

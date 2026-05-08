@@ -65,37 +65,65 @@ public class Form0503117Mapper implements FormMapper {
 //        List<Data> dataList = headerExtractionService.getListTable(file, ExcelSearchConstants.LIST_NAME);
 
 
-        Table table = new Table();
-        table.setCode("Строка");
+        Table tableIncome = new Table();
+        tableIncome.setCode("Строка");
+
+        Table tableOfSources = new Table();
+        tableOfSources.setCode("Строка");
 
         for (ParseResult parseResult : multiSheetResult.getParseResults()) {
             if (parseResult.getSheetName().equals("Доходы")) {
                 List<Data> incomeSheetList = parseResult.getDatas();
-                incomeSheetList.forEach(table::addData);
+                incomeSheetList.forEach(tableIncome::addData);
+            }
+            if (parseResult.getSheetName().equals("Источники")) {
+                List<Data> sourcesSheetList = parseResult.getDatas();
+                sourcesSheetList.forEach(tableOfSources::addData);
             }
         }
 
 
-        System.out.println(table);
-        Document document = new Document();
-        document.setVb("09");
-        document.setAdm("395.04000000");
+        Document documentIncome = new Document();
+        documentIncome.setVb("09");
+        documentIncome.setAdm("395.04000000");
+        documentIncome.setDocStatus(new DocStatus(2));
+        documentIncome.addTable(tableIncome);
+        documentIncome.setSignature(new Signature());
 
-        document.addTable(table);
-        document.setSignature(new Signature());
+        FormVariant formVariantIncome = new FormVariant();
+        formVariantIncome.setNumber(1);
+        formVariantIncome.setName("Вариант №1");
+        formVariantIncome.setStartDate(startDate);
+        formVariantIncome.setEndDate(endDate);
+        formVariantIncome.setNsiVariantCode("0000");
+        formVariantIncome.setNsiVariantName("Основной вариант");
+        formVariantIncome.setBehaviour(0);
+        formVariantIncome.setStatus(6);
+        formVariantIncome.addDocument(documentIncome);
+        formVariantIncome.setSignature(new Signature());
 
-        FormVariant formVariant = new FormVariant();
-        formVariant.setNumber(1);
-        formVariant.setName("Вариант №1");
-        formVariant.setStartDate(startDate);
-        formVariant.setEndDate(endDate);
-        formVariant.setNsiVariantCode("0000");
-        formVariant.setNsiVariantName("Основной вариант");
-        formVariant.setBehaviour(0);
-        formVariant.setStatus(6);
-        formVariant.addDocument(document);
+        Document documentOfSources = new Document();
+        documentOfSources.setVb("09");
+        documentOfSources.setAdm("395.04000000");
+        documentOfSources.setDocStatus(new DocStatus(2));
+        documentOfSources.addTable(tableOfSources);
+        documentOfSources.setSignature(new Signature());
 
-        DateAnnotationProcessor.formatDates(formVariant);
+        FormVariant formVariantOfSources = new FormVariant();
+        formVariantOfSources.setNumber(1);
+        formVariantOfSources.setName("Вариант №1");
+        formVariantOfSources.setStartDate(startDate);
+        formVariantOfSources.setEndDate(endDate);
+        formVariantOfSources.setNsiVariantCode("0000");
+        formVariantOfSources.setNsiVariantName("Основной вариант");
+        formVariantOfSources.setBehaviour(0);
+        formVariantOfSources.setStatus(6);
+        formVariantOfSources.addDocument(documentOfSources);
+        formVariantOfSources.setSignature(new Signature());
+
+
+        DateAnnotationProcessor.formatDates(formVariantIncome);
+        DateAnnotationProcessor.formatDates(formVariantOfSources);
 
         Form form117 = new Form();
         form117.setCode("117");
@@ -107,7 +135,7 @@ public class Form0503117Mapper implements FormMapper {
         form11701.setCode("11701");
         form11701.setName("Доходы бюджета");
         form11701.setStatus(6);
-        form11701.addFormVariant(formVariant);
+        form11701.addFormVariant(formVariantIncome);
         form11701.setMeta(metaService.build("11701"));
         form11701.setSignature(new Signature());
 
@@ -115,7 +143,7 @@ public class Form0503117Mapper implements FormMapper {
         form11703.setCode("11703");
         form11703.setName("Источники финансирования дефицита бюджета");
         form11703.setStatus(6);
-        form11703.addFormVariant(new FormVariant());
+        form11703.addFormVariant(formVariantOfSources);
         form11703.setMeta(metaService.build("11703"));
         form11703.setSignature(new Signature());
 
@@ -135,7 +163,7 @@ public class Form0503117Mapper implements FormMapper {
         form11722.setMeta(metaService.build("11722"));
         form11722.setSignature(new Signature());
 
-        List<Form> forms = List.of(form117/*, form11701, form11703, form11712, form11722*/);
+        List<Form> forms = List.of(form117, form11701, form11703, form11712, form11722);
 
         SourceDictItem sourceDictItem = SourceDictionary.getByName(multiSheetResult.getFinancialOrg());
 

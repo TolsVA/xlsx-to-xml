@@ -128,9 +128,9 @@ public class HeaderExtractionService {
                 String col5 = normalizeNumber(excelReader.getCellValue(row.getCell(4), evaluator));
                 String col6 = normalizeNumber(excelReader.getCellValue(row.getCell(5), evaluator));
 
-                Data data = new Data(vd, null, col4, col5, col6);
-
-                result.add(data);
+//                Data data = new Data(vd, null, col4, col5, col6);
+//
+//                result.add(data);
             }
             return result;
         });

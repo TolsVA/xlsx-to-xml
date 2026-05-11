@@ -132,8 +132,45 @@ public class ExcelParser {
                     if (value.length() < 20 || value.isBlank()) break;
 
                     if (result.getSheetName().equals("Доходы")) {
-                        if (value.startsWith("00", 11)) break;
                         if (value.startsWith("00", 6)) break;
+                        if (value.startsWith("00", 11)) break;
+                        if (value.startsWith("000", 17)) break;
+
+                        assert table != null;
+                        for (int k = table.getData().size() - 1; k >= 0; k--) {
+                            Data d = table.getData().get(k);
+                            String vd = d.getVd();
+
+                            boolean sameFirst0313 =
+                                    vd.substring(0, 10).equals(value.substring(3, 13));
+
+
+//                            boolean sameFirst8 =
+//                                    vd.substring(0, 5).equals(value.substring(3, 8));
+
+
+                            boolean sameFirst1720 =
+                                    vd.substring(14, 17).equals(value.substring(17, 20));
+
+
+//                            boolean sameFirst10 =
+//                                    vd.substring(5, 7).equals(value.substring(8, 10));
+
+
+                            if (vd.length() >= 20 && sameFirst0313 && sameFirst1720) {
+                                table.getData().remove(d);
+                            }
+
+//                            boolean sameFirst1720 =
+//                                    vd.substring(14, 17).equals(value.substring(17, 20));
+//
+//                            boolean sameFirst013 =
+//                                    vd.substring(0, 10).equals(value.substring(3, 13));
+//
+//                            if (vd.length() >= 20 && vd.startsWith("00", 11) && sameFirst1720) {
+//                                table.getData().remove(k);
+//                            }
+                        }
 
                         data.setVd(value.substring(3));
                     }
@@ -205,6 +242,7 @@ public class ExcelParser {
         int year = reportDate.getYear() - 1;
 
         LocalDate start = LocalDate.of(year, reportDate.getMonth(), reportDate.getDayOfMonth());
+
         LocalDate end = start.plusYears(1);
 
         String startDate = start.toString();

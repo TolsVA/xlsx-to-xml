@@ -17,6 +17,18 @@ import java.util.stream.Stream;
 @NoArgsConstructor
 public class Data {
 
+    @XmlAttribute(name = "РзПр")
+    private String rzpr;
+
+    @XmlAttribute(name = "ЦСР")
+    private String csp;
+
+    @XmlAttribute(name = "ВР")
+    private String vr;
+
+    @XmlAttribute(name = "КОСГУ")
+    private String kosgu;
+
     @XmlAttribute(name = "ВД")
     private String vd;
 

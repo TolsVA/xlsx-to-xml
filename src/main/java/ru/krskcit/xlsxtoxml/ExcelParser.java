@@ -23,6 +23,9 @@ public class ExcelParser {
     private MultiSheetResult multiSheetResult;
     private LocalDate reportDate;
 
+    private Row headRow;
+    private List<Integer> rangeHead;
+
     public ParseResult parse(Sheet sheet, FormulaEvaluator evaluator, MultiSheetResult multiSheetResult) {
         this.evaluator = evaluator;
         this.multiSheetResult = multiSheetResult;
@@ -37,7 +40,6 @@ public class ExcelParser {
         boolean headFound = false;
         boolean subtitleFound = true;
 
-        Row headRow = null;
         int dataCol = -1;
 
         FormVariant formVariant = new FormVariant();
@@ -58,7 +60,7 @@ public class ExcelParser {
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            if (i < 20) scanMeta(row, result);
+            if (20 > i || i > sheet.getLastRowNum() - 5) scanMeta(row, result);
 
             // HEAD
             if (!headFound) {
@@ -92,15 +94,14 @@ public class ExcelParser {
 
             Data data = new Data();
 
-            for (int j = dataCol; j < headRow.getLastCellNum(); j++) {
-
+            for (Integer j : rangeHead) {
                 String key = normalizeValue(raw(headRow.getCell(j))); // ← ключ из header
 
                 if (key == null || key.isBlank()) break;
 
                 String value = normalizeValue(raw(row.getCell(j)));   // ← значение
 
-                // если столбец ".*код .* бюджетной классификации.*"
+                // если столбец ".*код.* бюджетной классификации.*"
                 if (norm(key).matches(targetColumn)) {
                     if (value == null) break;
 
@@ -196,7 +197,7 @@ public class ExcelParser {
             if (document != null) {
                 if (!data.isEmpty()) {
                     table.getData().add(data);
-                } else if(table.getData().isEmpty()){
+                } else if (table.getData().isEmpty()) {
                     formVariant.getDocuments().remove(document);
                 }
             }
@@ -238,21 +239,63 @@ public class ExcelParser {
         return new BigDecimal(cleaned).setScale(2, RoundingMode.HALF_UP);
     }
 
+//private BigDecimal format(String value) {
+//
+//    if (value == null || value.isBlank()) {
+//        return null;
+//    }
+//
+//    String cleaned = value
+//            .replace("\u00A0", "")
+//            .replace(" ", "")
+//            .replace(",", ".");
+//
+//    // оставляем только цифры, точку и минус
+//    cleaned = cleaned.replaceAll("[^0-9.-]", "");
+//
+//    // минус только в начале
+//    cleaned = cleaned.replaceAll("(?<!^)-", "");
+//
+//    // только одна точка
+//    int firstDot = cleaned.indexOf('.');
+//
+//    if (firstDot != -1) {
+//        cleaned =
+//                cleaned.substring(0, firstDot + 1) +
+//                        cleaned.substring(firstDot + 1).replace(".", "");
+//    }
+//
+//    if (cleaned.isBlank()
+//            || cleaned.equals(".")
+//            || cleaned.equals("-")
+//            || cleaned.equals("-.")) {
+//
+//        return null;
+//    }
+//
+//    return new BigDecimal(cleaned)
+//            .setScale(2, RoundingMode.HALF_UP);
+//}
+
     // ---------------- HEAD ----------------
 
     private boolean isHead(Row row, Map<String, String> expected) {
         int m = 0;
+        List<Integer> rangeHead = new ArrayList<>();
         for (String v : expected.values()) {
             for (int i = 0; i < row.getLastCellNum(); i++) {
                 String cell = norm(row.getCell(i));
                 if (cell.equals(v) || cell.matches(v)) {
                     m++;
+                    rangeHead.add(i);
                     break;
                 }
             }
         }
+        boolean b = m == expected.size();
+        if (b) this.rangeHead = rangeHead;
 //        return (double) m / expected.size() >= 0.8;
-        return (double) m == expected.size();
+        return b;
     }
 
     // ---------------- SUBTITLE ----------------
@@ -316,6 +359,26 @@ public class ExcelParser {
                     int index = s.indexOf(ln);
                     if (index != -1) {
                         multiSheetResult.setSectionTitle(st.substring(index));
+                    }
+                }
+            }
+
+            boolean isApproved = r.getBudgetExecutionResult().getApproved() == null;
+            boolean isImplemented = r.getBudgetExecutionResult().getImplemented() == null;
+
+            if (
+                    (isApproved || isImplemented)
+                            && s.toLowerCase().contains(BudgetExecutionResult.BUDGET_EXECUTION_RESULT.toLowerCase())
+            ) {
+                for (int j = i; j < headRow.getLastCellNum(); j++) {
+                    if (raw(headRow.getCell(j)) != null
+                            && norm(raw(headRow.getCell(j))).equals("утвержденные бюджетные назначения")
+                    ) {
+                        r.getBudgetExecutionResult().setApproved(format(raw(row.getCell(j))));
+                    }
+
+                    if (raw(headRow.getCell(j)) != null && norm(raw(headRow.getCell(j))).equals("исполнено")) {
+                        r.getBudgetExecutionResult().setImplemented(format(raw(row.getCell(j))));
                     }
                 }
             }

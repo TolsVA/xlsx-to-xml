@@ -13,5 +13,7 @@ public class ParseResult {
     private Integer subtitleRow;
     private Integer reportRow;
 
+    private BudgetExecutionResult budgetExecutionResult = new BudgetExecutionResult();
+
     private List<FormVariant> formVariants = new ArrayList<>();
 }

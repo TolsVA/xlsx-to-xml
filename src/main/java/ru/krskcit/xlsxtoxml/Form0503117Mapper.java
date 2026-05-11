@@ -4,18 +4,22 @@ import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import ru.krskcit.xlsxtoxml.annotation.DateAnnotationProcessor;
 import ru.krskcit.xlsxtoxml.dicts.SourceDictItem;
 import ru.krskcit.xlsxtoxml.dicts.SourceDictionary;
+import ru.krskcit.xlsxtoxml.dto.Table;
 import ru.krskcit.xlsxtoxml.mapper.FormMapper;
 import ru.krskcit.xlsxtoxml.dto.*;
 import ru.krskcit.xlsxtoxml.utils.DateFormatType;
 import ru.krskcit.xlsxtoxml.utils.PeriodType;
+
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 import static ru.krskcit.xlsxtoxml.constants.ReportConstants.*;
 import static ru.krskcit.xlsxtoxml.constants.SchemaConstants.*;
 
@@ -36,6 +40,12 @@ public class Form0503117Mapper implements FormMapper {
         form117.setName(multiSheetResult.getReportTitle());
         form117.setStatus(5);
         form117.setSignature(new Signature());
+
+        Form form11722 = new Form();
+        form11722.setCode("11722");
+        form11722.setName("Результат исполнения бюджета");
+        form11722.setStatus(6);
+        form11722.setSignature(new Signature());
 
         Source source = new Source();
         source.getForms().add(form117);
@@ -62,18 +72,14 @@ public class Form0503117Mapper implements FormMapper {
                 String formCode = "11712";
                 String formName = "Расходы бюджета";
                 fillOutForm(form, formCode, formName);
+
+
+                FormVariant formVariant = getFormVariant(parseResult);
+                form11722.addFormVariant(formVariant);
+                form11722.setMeta(metaService.build("11722"));
             }
             source.getForms().add(form);
         }
-
-
-        Form form11722 = new Form();
-        form11722.setCode("11722");
-        form11722.setName("Результат исполнения бюджета");
-        form11722.setStatus(6);
-        form11722.addFormVariant(new FormVariant());
-        form11722.setMeta(metaService.build("11722"));
-        form11722.setSignature(new Signature());
 
         source.getForms().add(form11722);
 
@@ -135,6 +141,46 @@ public class Form0503117Mapper implements FormMapper {
         marshaller.marshal(root, out);
 
         return out.toByteArray();
+    }
+
+    private @NonNull FormVariant getFormVariant(ParseResult parseResult) {
+        FormVariant formVariant = getVariant(parseResult);
+
+        Data data = new Data();
+        data.setRzpr("0000");
+        data.setCsp("0000000000");
+        data.setVr("000");
+        data.setKosgu("790");
+        data.setCol4(parseResult.getBudgetExecutionResult().getApproved());
+        data.setCol5(parseResult.getBudgetExecutionResult().getImplemented());
+
+        Table table = new Table();
+        table.setCode("Строка");
+        table.getData().add(data);
+
+        Document document = new Document();
+        document.setVb("0");
+        document.setAdm("001");
+        document.setDocStatus(new DocStatus(2));
+        document.getTables().add(table);
+        document.setSignature(new Signature());
+
+        formVariant.getDocuments().add(document);
+        return formVariant;
+    }
+
+    private @NonNull FormVariant getVariant(ParseResult parseResult) {
+        FormVariant formVariant = new FormVariant();
+        formVariant.setNumber(parseResult.getFormVariants().get(0).getNumber());
+        formVariant.setName(parseResult.getFormVariants().get(0).getName());
+        formVariant.setStartDate(parseResult.getFormVariants().get(0).getStartDate());
+        formVariant.setEndDate(parseResult.getFormVariants().get(0).getEndDate());
+        formVariant.setNsiVariantCode(parseResult.getFormVariants().get(0).getNsiVariantCode());
+        formVariant.setNsiVariantName(parseResult.getFormVariants().get(0).getNsiVariantName());
+        formVariant.setBehaviour(parseResult.getFormVariants().get(0).getBehaviour());
+        formVariant.setStatus(parseResult.getFormVariants().get(0).getStatus());
+        formVariant.setSignature(parseResult.getFormVariants().get(0).getSignature());
+        return formVariant;
     }
 
     private void fillOutForm(Form form, String formCode, String formName) {

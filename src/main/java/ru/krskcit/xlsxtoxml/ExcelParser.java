@@ -141,35 +141,26 @@ public class ExcelParser {
                             Data d = table.getData().get(k);
                             String vd = d.getVd();
 
+                            boolean sameFirst0308 =
+                                    vd.substring(0, 5).equals(value.substring(3, 8));
+
+                            boolean sameFirst1113 =
+                                    vd.substring(8, 10).equals(value.substring(11, 13));
+
                             boolean sameFirst0313 =
                                     vd.substring(0, 10).equals(value.substring(3, 13));
 
-
-//                            boolean sameFirst8 =
-//                                    vd.substring(0, 5).equals(value.substring(3, 8));
-
-
                             boolean sameFirst1720 =
                                     vd.substring(14, 17).equals(value.substring(17, 20));
-
-
-//                            boolean sameFirst10 =
-//                                    vd.substring(5, 7).equals(value.substring(8, 10));
-
 
                             if (vd.length() >= 20 && sameFirst0313 && sameFirst1720) {
                                 table.getData().remove(d);
                             }
 
-//                            boolean sameFirst1720 =
-//                                    vd.substring(14, 17).equals(value.substring(17, 20));
-//
-//                            boolean sameFirst013 =
-//                                    vd.substring(0, 10).equals(value.substring(3, 13));
-//
-//                            if (vd.length() >= 20 && vd.startsWith("00", 11) && sameFirst1720) {
-//                                table.getData().remove(k);
-//                            }
+                            if (sameFirst0308 && sameFirst1113 && sameFirst1720) {
+                                table.getData().remove(d);
+                            }
+
                         }
 
                         data.setVd(value.substring(3));

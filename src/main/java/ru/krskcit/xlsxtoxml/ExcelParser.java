@@ -139,27 +139,56 @@ public class ExcelParser {
                         assert table != null;
                         for (int k = table.getData().size() - 1; k >= 0; k--) {
                             Data d = table.getData().get(k);
-                            String vd = d.getVd();
+                            String vd = document.getAdm() + d.getVd();
 
-                            boolean sameFirst0308 =
-                                    vd.substring(0, 5).equals(value.substring(3, 8));
 
-                            boolean sameFirst1113 =
-                                    vd.substring(8, 10).equals(value.substring(11, 13));
-
-                            boolean sameFirst0313 =
-                                    vd.substring(0, 10).equals(value.substring(3, 13));
-
-                            boolean sameFirst1720 =
-                                    vd.substring(14, 17).equals(value.substring(17, 20));
-
-                            if (vd.length() >= 20 && sameFirst0313 && sameFirst1720) {
+                            if (vd.substring(0, 8).equals(value.substring(0, 8))
+                                    && vd.substring(11, 13).equals(value.substring(11, 13))
+                                    && vd.substring(17, 20).equals(value.substring(17, 20))
+                                    && vd.startsWith("000", 8) && !value.startsWith("000", 8)
+                            ) {
                                 table.getData().remove(d);
                             }
 
-                            if (sameFirst0308 && sameFirst1113 && sameFirst1720) {
+
+                            if (vd.substring(0, 8).equals(value.substring(0, 8))
+                                    && vd.substring(11, 13).equals(value.substring(11, 13))
+                                    && vd.substring(17, 20).equals(value.substring(17, 20))
+                                    && vd.substring(8, 11).equals(value.substring(8, 11))
+                                    && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
+                            ) {
                                 table.getData().remove(d);
                             }
+
+                            if (vd.substring(0, 8).equals(value.substring(0, 8))
+                                    && vd.substring(11, 13).equals(value.substring(11, 13))
+                                    && vd.substring(17, 20).equals(value.substring(17, 20))
+                                    && vd.substring(8, 11).equals(value.substring(8, 11))
+                                    && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
+                            ) {
+                                table.getData().remove(d);
+                            }
+
+
+//                            boolean sameFirst0308 =
+//                                    vd.substring(0, 5).equals(value.substring(3, 8));
+//
+//                            boolean sameFirst1113 =
+//                                    vd.substring(8, 10).equals(value.substring(11, 13));
+//
+//                            boolean sameFirst0313 =
+//                                    vd.substring(0, 10).equals(value.substring(3, 13));
+//
+//                            boolean sameFirst1720 =
+//                                    vd.substring(14, 17).equals(value.substring(17, 20));
+//
+//                            if (vd.length() >= 20 && sameFirst0313 && sameFirst1720) {
+//                                table.getData().remove(d);
+//                            }
+//
+//                            if (sameFirst0308 && sameFirst1113 && sameFirst1720) {
+//                                table.getData().remove(d);
+//                            }
 
                         }
 

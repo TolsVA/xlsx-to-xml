@@ -26,6 +26,19 @@ public class ExcelParser {
     private Row headRow;
     private List<Integer> rangeHead;
 
+    Map<String, Set<String>> children = Map.of(
+            "10302010", Set.of("10302011", "10302012", "10302013"),
+            "10302140", Set.of("10302142", "10302143", "10302144"),
+            "10302230", Set.of("10302231", "10302232"),
+            "10302240", Set.of("10302241", "10302242"),
+            "10302250", Set.of("10302251", "10302252"),
+            "10302260", Set.of("10302261", "10302262"),
+            "10501010", Set.of("10501011", "10501012"),
+            "10501020", Set.of("10501021", "10501022"),
+            "10602000", Set.of("10602010", "10602020"),
+            "10807080", Set.of("10807081", "10807082", "10807083", "10807084", "10807085")
+    );
+
     public ParseResult parse(Sheet sheet, FormulaEvaluator evaluator, MultiSheetResult multiSheetResult) {
         this.evaluator = evaluator;
         this.multiSheetResult = multiSheetResult;
@@ -110,7 +123,7 @@ public class ExcelParser {
                             .replace("\n", " ")
                             .trim();
 
-                    if (value.startsWith("000")) break;
+//                    if (value.startsWith("000")) break;
 
                     if (formVariant.getDocuments().isEmpty()
                             || !formVariant.getDocuments().get(formVariant.getDocuments().size() - 1)
@@ -136,60 +149,51 @@ public class ExcelParser {
                         if (value.startsWith("00", 11)) break;
                         if (value.startsWith("000", 17)) break;
 
-                        assert table != null;
-                        for (int k = table.getData().size() - 1; k >= 0; k--) {
-                            Data d = table.getData().get(k);
-                            String vd = document.getAdm() + d.getVd();
+
+                        for (Document documents : formVariant.getDocuments()) {
+
+                            List<Data> datas = documents.getTables().get(0).getData();
+
+                            assert table != null;
+                            for (int k = datas.size() - 1; k >= 0; k--) {
+                                Data d = datas.get(k);
+                                String vd = document.getAdm() + d.getVd();
+
+                                if (vd.startsWith("000") && vd.substring(3, 20).equals(value.substring(3, 20))) {
+                                    datas.remove(d);
+                                }
+
+                                if ((vd.substring(0, 3).equals(value.substring(0, 3)) || vd.startsWith("000"))
+                                        && vd.substring(3, 8).equals(value.substring(3, 8))
+                                        && vd.substring(11, 13).equals(value.substring(11, 13))
+                                        && vd.substring(17, 20).equals(value.substring(17, 20))
+                                        && vd.startsWith("000", 8) && !value.startsWith("000", 8)
+                                ) {
+                                    datas.remove(d);
+                                }
 
 
-                            if (vd.substring(0, 8).equals(value.substring(0, 8))
-                                    && vd.substring(11, 13).equals(value.substring(11, 13))
-                                    && vd.substring(17, 20).equals(value.substring(17, 20))
-                                    && vd.startsWith("000", 8) && !value.startsWith("000", 8)
-                            ) {
-                                table.getData().remove(d);
+                                if ((vd.substring(0, 3).equals(value.substring(0, 3)) || vd.startsWith("000"))
+                                        && vd.substring(3, 8).equals(value.substring(3, 8))
+                                        && vd.substring(11, 13).equals(value.substring(11, 13))
+                                        && vd.substring(17, 20).equals(value.substring(17, 20))
+                                        && vd.substring(8, 11).equals(value.substring(8, 11))
+                                        && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
+                                ) {
+                                    datas.remove(d);
+                                }
+
+                                if ((vd.substring(0, 3).equals(value.substring(0, 3)) || vd.startsWith("000"))
+                                        && vd.substring(3, 8).equals(value.substring(3, 8))
+                                        && vd.substring(11, 13).equals(value.substring(11, 13))
+                                        && vd.substring(17, 20).equals(value.substring(17, 20))
+                                        && vd.substring(13, 17).equals(value.substring(13, 17))
+                                        && isChildren(vd.substring(3, 11), value.substring(3, 11))
+                                ) {
+                                    System.out.println("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
+                                    datas.remove(d);
+                                }
                             }
-
-
-                            if (vd.substring(0, 8).equals(value.substring(0, 8))
-                                    && vd.substring(11, 13).equals(value.substring(11, 13))
-                                    && vd.substring(17, 20).equals(value.substring(17, 20))
-                                    && vd.substring(8, 11).equals(value.substring(8, 11))
-                                    && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
-                            ) {
-                                table.getData().remove(d);
-                            }
-
-                            if (vd.substring(0, 8).equals(value.substring(0, 8))
-                                    && vd.substring(11, 13).equals(value.substring(11, 13))
-                                    && vd.substring(17, 20).equals(value.substring(17, 20))
-                                    && vd.substring(8, 11).equals(value.substring(8, 11))
-                                    && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
-                            ) {
-                                table.getData().remove(d);
-                            }
-
-
-//                            boolean sameFirst0308 =
-//                                    vd.substring(0, 5).equals(value.substring(3, 8));
-//
-//                            boolean sameFirst1113 =
-//                                    vd.substring(8, 10).equals(value.substring(11, 13));
-//
-//                            boolean sameFirst0313 =
-//                                    vd.substring(0, 10).equals(value.substring(3, 13));
-//
-//                            boolean sameFirst1720 =
-//                                    vd.substring(14, 17).equals(value.substring(17, 20));
-//
-//                            if (vd.length() >= 20 && sameFirst0313 && sameFirst1720) {
-//                                table.getData().remove(d);
-//                            }
-//
-//                            if (sameFirst0308 && sameFirst1113 && sameFirst1720) {
-//                                table.getData().remove(d);
-//                            }
-
                         }
 
                         data.setVd(value.substring(3));
@@ -258,6 +262,9 @@ public class ExcelParser {
                     formVariant.getDocuments().remove(document);
                 }
             }
+
+            List<Document> documentList = formVariant.getDocuments();
+            documentList.removeIf(doc -> doc.getTables().get(0).getData().isEmpty());
         }
         int year = reportDate.getYear() - 1;
 
@@ -276,6 +283,11 @@ public class ExcelParser {
         result.getFormVariants().add(formVariant);
 
         return result;
+    }
+
+    private boolean isChildren(String parent, String child) {
+        return children.getOrDefault(parent, Collections.emptySet())
+                .contains(child);
     }
 
     private BigDecimal format(String value) {

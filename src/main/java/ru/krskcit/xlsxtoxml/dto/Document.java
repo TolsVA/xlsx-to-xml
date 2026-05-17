@@ -6,9 +6,6 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Data
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Document {
@@ -23,7 +20,7 @@ public class Document {
     private DocStatus docStatus;
 
     @XmlElement(name = "Table")
-    private List<Table> tables = new ArrayList<>();
+    private Table table;
 
     @XmlElement(name = "Signature")
     private Signature signature;

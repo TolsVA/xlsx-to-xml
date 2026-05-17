@@ -58,27 +58,27 @@ public class ExcelParseService {
 
 
                 for (Document document : parseResult.getFormVariants().get(0).getDocuments()) {
-                    for (Table table : document.getTables()) {
-                        for (Data datum : table.getData()) {
-                            c4 = c4.add(
-                                    datum.getCol4() == null
-                                            ? BigDecimal.ZERO
-                                            : datum.getCol4()
-                            );
+                    Table table = document.getTable();
+                    for (Data datum : table.getData()) {
+                        c4 = c4.add(
+                                datum.getCol4() == null
+                                        ? BigDecimal.ZERO
+                                        : datum.getCol4()
+                        );
 
-                            c5 = c5.add(
-                                    datum.getCol5() == null
-                                            ? BigDecimal.ZERO
-                                            : datum.getCol5()
-                            );
+                        c5 = c5.add(
+                                datum.getCol5() == null
+                                        ? BigDecimal.ZERO
+                                        : datum.getCol5()
+                        );
 
-                            c6 = c6.add(
-                                    datum.getCol6() == null
-                                            ? BigDecimal.ZERO
-                                            : datum.getCol6()
-                            );
-                        }
+                        c6 = c6.add(
+                                datum.getCol6() == null
+                                        ? BigDecimal.ZERO
+                                        : datum.getCol6()
+                        );
                     }
+
                 }
 
                 System.out.printf(

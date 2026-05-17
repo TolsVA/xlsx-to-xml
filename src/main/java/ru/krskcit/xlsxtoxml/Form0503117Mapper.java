@@ -3,7 +3,6 @@ package ru.krskcit.xlsxtoxml;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Marshaller;
 import lombok.RequiredArgsConstructor;
-import org.apache.poi.ss.usermodel.*;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
@@ -162,7 +161,7 @@ public class Form0503117Mapper implements FormMapper {
         document.setVb("0");
         document.setAdm("001");
         document.setDocStatus(new DocStatus(2));
-        document.getTables().add(table);
+        document.setTable(table);
         document.setSignature(new Signature());
 
         formVariant.getDocuments().add(document);

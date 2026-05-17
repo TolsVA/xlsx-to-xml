@@ -26,17 +26,60 @@ public class ExcelParser {
     private Row headRow;
     private List<Integer> rangeHead;
 
-    Map<String, Set<String>> children = Map.of(
-            "10302010", Set.of("10302011", "10302012", "10302013"),
-            "10302140", Set.of("10302142", "10302143", "10302144"),
-            "10302230", Set.of("10302231", "10302232"),
-            "10302240", Set.of("10302241", "10302242"),
-            "10302250", Set.of("10302251", "10302252"),
-            "10302260", Set.of("10302261", "10302262"),
-            "10501010", Set.of("10501011", "10501012"),
-            "10501020", Set.of("10501021", "10501022"),
-            "10602000", Set.of("10602010", "10602020"),
-            "10807080", Set.of("10807081", "10807082", "10807083", "10807084", "10807085")
+    Map<String, Set<String>> children = Map.ofEntries(
+            Map.entry("10102000", Set.of("10102010", "10102020", "10102021", "10102022", "10102023", "10102024",
+                    "10102030", "10102040", "10102050", "10102060", "10102070", "10102080", "10102090", "10102100",
+                    "10102101", "10102102", "10102103", "10102110", "10102111", "10102112", "10102113", "10102120",
+                    "10102130", "10102140", "10102150", "10102160", "10102170", "10102180", "10102190", "10102200",
+                    "10102210", "10102220", "10102230", "10102240")),
+            Map.entry("10302000", Set.of("10302010", "10302020", "10302021", "10302022", "10302030", "10302041",
+                    "10302042", "10302060", "10302070", "10302080", "10302090", "10302091", "10302100", "10302110",
+                    "10302120", "10302130", "10302140", "10302190", "10302200", "10302210", "10302220", "10302230",
+                    "10302240", "10302250", "10302260", "10302300", "10302310", "10302320", "10302330", "10302340",
+                    "10302350", "10302370", "10302380", "10302390", "10302400", "10302420", "10302430", "10302440",
+                    "10302450", "10302460", "10302480", "10302490", "10302500", "10302510", "10302520")),
+            Map.entry("10302010", Set.of("10302011", "10302012", "10302013")),
+            Map.entry("10302140", Set.of("10302142", "10302143", "10302144")),
+            Map.entry("10302230", Set.of("10302231", "10302232")),
+            Map.entry("10302240", Set.of("10302241", "10302242")),
+            Map.entry("10302250", Set.of("10302251", "10302252")),
+            Map.entry("10302260", Set.of("10302261", "10302262")),
+            Map.entry("10501010", Set.of("10501011", "10501012")),
+            Map.entry("10501020", Set.of("10501021", "10501022")),
+            Map.entry("10602000", Set.of("10602010", "10602020")),
+            Map.entry("10807080", Set.of("10807081", "10807082", "10807083", "10807084", "10807085")),
+            Map.entry("10807140", Set.of("10807141", "10807142")),
+            Map.entry("10807170", Set.of("10807171", "10807172")),
+            Map.entry("11201040", Set.of("11201041", "11201042", "11201043")),
+            Map.entry("11202010", Set.of("11202011", "11202012", "11202013")),
+            Map.entry("11202050", Set.of("11202051", "11202052")),
+            Map.entry("11204010", Set.of("11204011", "11204012", "11204013",
+                    "11204014", "11204015", "11204016", "11204017")),
+            Map.entry("11204060", Set.of("11204061", "11204062", "11204063")),
+            Map.entry("11301400", Set.of("11301401", "11301402", "11301410")),
+            Map.entry("11402020", Set.of("11402022", "11402023", "11402028")),
+            Map.entry("11601050", Set.of("11601051", "11601052", "11601053", "11601054", "11601055", "11601056")),
+            Map.entry("11601060", Set.of("11601061", "11601062", "11601063", "11601064")),
+            Map.entry("11601070", Set.of("11601071", "11601072", "11601073", "11601074",
+                    "11601075", "11601076", "11601077")),
+            Map.entry("11601080", Set.of("11601081", "11601082", "11601083", "11601084")),
+            Map.entry("11601090", Set.of("11601091", "11601092", "11601093", "11601094")),
+            Map.entry("11601100", Set.of("11601101", "11601102", "11601103", "11601104")),
+            Map.entry("11601110", Set.of("11601111", "11601112", "11601113", "11601114")),
+            Map.entry("11601120", Set.of("11601121", "11601122", "11601123")),
+            Map.entry("11601130", Set.of("11601131", "11601132", "11601133", "11601134")),
+            Map.entry("11601140", Set.of("11601141", "11601142", "11601143", "11601144")),
+            Map.entry("11601150", Set.of("11601151", "11601152", "11601153", "11601154",
+                    "11601155", "11601156","11601157", "11601158", "11601159")),
+            Map.entry("11601160", Set.of("11601161", "11601162", "11601163")),
+            Map.entry("11601170", Set.of("11601171", "11601172", "11601173", "11601174")),
+            Map.entry("11601180", Set.of("11601181", "11601182", "11601183", "11601184")),
+            Map.entry("11601190", Set.of("11601191", "11601192", "11601193", "11601194",
+                    "11601195", "11601196", "11601197")),
+            Map.entry("11601200", Set.of("11601201", "11601202", "11601203", "11601204", "11601205")),
+            Map.entry("11601240", Set.of("11601241", "11601242")),
+            Map.entry("11610020", Set.of("11610021", "11610022")),
+            Map.entry("11611060", Set.of("11611061", "11611062", "11611063", "11611064"))
     );
 
     public ParseResult parse(Sheet sheet, FormulaEvaluator evaluator, MultiSheetResult multiSheetResult) {
@@ -136,7 +179,7 @@ public class ExcelParser {
                         document.setVb("09");
                         document.setAdm(value.substring(0, 3));
                         document.setDocStatus(new DocStatus(2));
-                        document.getTables().add(table);
+                        document.setTable(table);
                         document.setSignature(new Signature());
 
                         formVariant.addDocument(document);
@@ -152,15 +195,16 @@ public class ExcelParser {
 
                         for (Document documents : formVariant.getDocuments()) {
 
-                            List<Data> datas = documents.getTables().get(0).getData();
+                            List<Data> datas = documents.getTable().getData();
 
                             assert table != null;
                             for (int k = datas.size() - 1; k >= 0; k--) {
                                 Data d = datas.get(k);
-                                String vd = document.getAdm() + d.getVd();
+                                String vd = documents.getAdm() + d.getVd();
 
                                 if (vd.startsWith("000") && vd.substring(3, 20).equals(value.substring(3, 20))) {
                                     datas.remove(d);
+                                    break;
                                 }
 
                                 if ((vd.substring(0, 3).equals(value.substring(0, 3)) || vd.startsWith("000"))
@@ -170,6 +214,7 @@ public class ExcelParser {
                                         && vd.startsWith("000", 8) && !value.startsWith("000", 8)
                                 ) {
                                     datas.remove(d);
+                                    break;
                                 }
 
 
@@ -181,6 +226,7 @@ public class ExcelParser {
                                         && vd.startsWith("0000", 13) && !value.startsWith("0000", 13)
                                 ) {
                                     datas.remove(d);
+                                    break;
                                 }
 
                                 if ((vd.substring(0, 3).equals(value.substring(0, 3)) || vd.startsWith("000"))
@@ -190,12 +236,11 @@ public class ExcelParser {
                                         && vd.substring(13, 17).equals(value.substring(13, 17))
                                         && isChildren(vd.substring(3, 11), value.substring(3, 11))
                                 ) {
-                                    System.out.println("jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj");
                                     datas.remove(d);
+                                    break;
                                 }
                             }
                         }
-
                         data.setVd(value.substring(3));
                     }
 
@@ -255,17 +300,13 @@ public class ExcelParser {
                 }
             }
 
-            if (document != null) {
-                if (!data.isEmpty()) {
-                    table.getData().add(data);
-                } else if (table.getData().isEmpty()) {
-                    formVariant.getDocuments().remove(document);
-                }
+            if (document != null && !data.isEmpty()) {
+                table.getData().add(data);
             }
-
-            List<Document> documentList = formVariant.getDocuments();
-            documentList.removeIf(doc -> doc.getTables().get(0).getData().isEmpty());
         }
+        List<Document> documentList = formVariant.getDocuments();
+        documentList.removeIf(doc -> doc.getTable().getData().isEmpty());
+
         int year = reportDate.getYear() - 1;
 
         LocalDate start = LocalDate.of(year, reportDate.getMonth(), reportDate.getDayOfMonth());
